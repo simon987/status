@@ -2,6 +2,9 @@ import java.util.concurrent.TimeUnit._
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorSystem, Behavior}
+import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.webapp.WebAppContext
+import org.scalatra.servlet.ScalatraListener
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -27,6 +30,24 @@ object ActorMain {
     }
 }
 
-object Main extends App {
-  val greeterMain: ActorSystem[ActorMain.Init] = ActorSystem(ActorMain(), "ActorMain")
+object Main {
+  def main(args: Array[String]) {
+
+    val _: ActorSystem[ActorMain.Init] = ActorSystem(ActorMain(), "ActorMain")
+
+    val port = if (System.getenv("PORT") != null) System.getenv("PORT").toInt else 8080
+
+    val server = new Server(port)
+    val context = new WebAppContext()
+
+    context setContextPath "/"
+    context.setResourceBase("src/main/webapp")
+    context.setInitParameter(ScalatraListener.LifeCycleKey, "ScalatraBootstrap")
+    context.addEventListener(new ScalatraListener)
+
+    server.setHandler(context)
+
+    server.start()
+    server.join()
+  }
 }
