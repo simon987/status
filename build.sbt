@@ -22,5 +22,7 @@ libraryDependencies ++= Seq(
 
   "org.scalatra" %% "scalatra" % "2.7.0-RC1",
   "org.eclipse.jetty" % "jetty-webapp" % "9.4.26.v20200117" % "container;compile",
-  "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided"
+  "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
+  "org.scalatra" %% "scalatra-json" % "2.7.0-RC1",
+  "org.json4s" %% "json4s-jackson" % "3.7.0-M2",
 )
