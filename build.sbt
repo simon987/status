@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
   "org.seleniumhq.selenium" % "selenium-java" % "3.141.59",
   "org.seleniumhq.selenium" % "selenium-firefox-driver" % "3.141.59",
 
-  "com.typesafe.akka" %% "akka-actor" % "2.6.3",
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.3",
 
   "io.circe" %% "circe-yaml" % "0.12.0",
   "io.circe" %% "circe-generic" % "0.12.0",

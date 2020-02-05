@@ -1,27 +1,59 @@
 import java.sql.Timestamp
 
-import scalaj.http.{Http, HttpRequest}
+import akka.actor.typed.Behavior
+import akka.actor.typed.scaladsl.{Behaviors, TimerScheduler}
+import scalaj.http.{Http, HttpResponse}
 
-class SiteChecker(url: String, script: String) {
+import scala.concurrent.duration.FiniteDuration
 
-  val request: HttpRequest = Http(url)
+object SiteChecker {
 
-  //TODO: different implementation if script is not empty
-  def check(): PingEvent = {
+  final case class Check(url: String, script: String)
+
+  def apply(interval: FiniteDuration): Behavior[Check] = {
+    Behaviors.setup { context =>
+      Behaviors.withTimers(timers => new SiteChecker(timers, interval).idle())
+    }
+  }
+}
+
+class SiteChecker(timers: TimerScheduler[SiteChecker.Check], interval: FiniteDuration) {
+
+  private def idle(): Behavior[SiteChecker.Check] = {
+    Behaviors.receiveMessage[SiteChecker.Check] { message =>
+      timers.startTimerAtFixedRate(message, interval)
+      active()
+    }
+  }
+
+  private def active(): Behavior[SiteChecker.Check] = {
+    Behaviors.receiveMessage[SiteChecker.Check] { message =>
+      Store += check(message.url, message.script)
+      active()
+    }
+  }
+
+  def check(url: String, script: String): PingEvent = {
 
     val start = System.currentTimeMillis()
+    var result = ""
 
     try {
-      //TODO: Check return code...
-      val res = request.asBytes
-      println(res.code)
+      val res: HttpResponse[Array[Byte]] = Http(url).asBytes
 
-      PingEvent(new Timestamp(start), (System.currentTimeMillis() - start).toInt, "ok")
+      if (res.is2xx) {
+        result = "ok"
+      } else {
+        result = "http" + res.code.toString
+      }
+
     } catch {
       //TODO: Handle/log exception
       case e: Exception =>
         println(e)
-        PingEvent(new Timestamp(start), (System.currentTimeMillis() - start).toInt, "err")
+        result = "err"
     }
+
+    PingEvent(url, new Timestamp(start), (System.currentTimeMillis() - start).toInt, result)
   }
 }

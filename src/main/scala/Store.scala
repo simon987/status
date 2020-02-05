@@ -18,22 +18,22 @@ object Store {
   ), Duration.Inf)
 
   def +=(e: Object): Future[Int] = e match {
-    case PingEvent(ts, latency, status) => _db.run(pingEvents += (ts, latency, status))
+    case PingEvent(url, ts, latency, status) => _db.run(pingEvents += (url, ts, latency, status))
     case _ => throw new InvalidArgumentException("Unknown type")
   }
 }
 
-case class PingEvent(ts: Timestamp, latency: Int, status: String)
+case class PingEvent(url: String, ts: Timestamp, latency: Int, status: String)
 
 
-class PingEvents(tag: Tag) extends Table[(Timestamp, Int, String)](tag, "PingEvent") {
+class PingEvents(tag: Tag) extends Table[(String, Timestamp, Int, String)](tag, "PingEvent") {
   def ts = column[Timestamp]("ts")
 
   def latency = column[Int]("latency")
 
   def status = column[String]("status")
 
-  def site = column[String]("site")
+  def url = column[String]("url")
 
-  def * = (ts, latency, status)
+  def * = (url, ts, latency, status)
 }
