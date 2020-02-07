@@ -14,28 +14,24 @@ object Store {
 
   Await.ready(_db.run(
     DBIO.seq(
-      Store.pingEvents.schema.create,
+      pingEvents.schema.create,
     )
   ), Duration.Inf)
 
   def +=(e: Object): Future[Int] = e match {
-    case PingEvent(url, ts, latency, status) => _db.run(pingEvents += (url, ts, latency, status))
+    case p: PingEvent => _db.run(pingEvents += p)
     case _ => throw new InvalidArgumentException("Unknown type")
   }
 
-  def events(url: String): Seq[PingEvent] = {
-    val q = for {
-      e <- pingEvents if e.url === url
-    } yield (e.ts, e.latency, e.status)
-
-    Await.result(_db.run(q.result), Duration.Inf)
+  def events(url: String, count: Int): Future[Seq[PingEvent]] = {
+    _db.run(pingEvents.sortBy(_.ts.desc).filter(_.url === url).take(count).result)
   }
 }
 
 case class PingEvent(url: String, ts: Timestamp, latency: Int, status: String)
 
 
-class PingEvents(tag: Tag) extends Table[(String, Timestamp, Int, String)](tag, "PingEvent") {
+class PingEvents(tag: Tag) extends Table[PingEvent](tag, "PingEvent") {
   def ts = column[Timestamp]("ts")
 
   def latency = column[Int]("latency")
@@ -44,5 +40,5 @@ class PingEvents(tag: Tag) extends Table[(String, Timestamp, Int, String)](tag, 
 
   def url = column[String]("url")
 
-  def * = (url, ts, latency, status)
+  def * = (url, ts, latency, status) <> (PingEvent.tupled, PingEvent.unapply)
 }

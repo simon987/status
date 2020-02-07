@@ -3,6 +3,9 @@ import org.json4s.{DefaultFormats, Formats}
 import org.scalatra._
 import org.scalatra.json._
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 class ScalatraBootstrap extends LifeCycle {
   override def init(context: ServletContext) {
     context.mount(new Server, "/*")
@@ -29,8 +32,8 @@ class Server extends ScalatraServlet with JacksonJsonSupport {
     Config.sites
   }
 
-  get("/api/events/:site") {
+  get("/api/events/:count/:site") {
     val site = Config.sites(params("site").toInt)
-    Store.events(site.url)
+    Await.result(Store.events(site.url, params("count").toInt), Duration.Inf)
   }
 }
