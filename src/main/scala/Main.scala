@@ -13,7 +13,7 @@ object ActorMain {
 
   final case class Init()
 
-  final val interval = FiniteDuration(5, SECONDS)
+  final val interval = FiniteDuration(2, MINUTES)
 
   def apply(): Behavior[Init] =
     Behaviors.setup { context =>

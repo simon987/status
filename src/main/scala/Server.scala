@@ -32,8 +32,11 @@ class Server extends ScalatraServlet with JacksonJsonSupport {
     Config.sites
   }
 
-  get("/api/events/:count/:site") {
+  get("/api/events/:site") {
+    val start = params("start").toLong * 1000
+    val end = params("end").toLong * 1000
     val site = Config.sites(params("site").toInt)
-    Await.result(Store.events(site.url, params("count").toInt), Duration.Inf)
+
+    Await.result(Store.events(site.url, start, end), Duration.Inf)
   }
 }

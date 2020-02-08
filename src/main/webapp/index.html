@@ -3,37 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <title>status</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="materialize.min.css">
+    <link rel="stylesheet" href="cal-heatmap.css">
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
 
 <main class="container">
-    <a class="header" href="/">
-        <h2>Yeet</h2>
-    </a>
-
-    <div class="card-panel">
-
-
-        <div class="card">
-            <div class="card-content">
-                <div class="card-title">About</div>
-                <p></p>
-            </div>
-        </div>
-    </div>
+    <div id="card-panel"></div>
 </main>
 
-<footer class="page-footer">
-    <div class="container">
-        <div class="row">Fork on <a href="https://github.com/pushshift/telegram">Github</a></div>
-    </div>
-    <div class="footer-copyright">
-        <div class="container">TODO Copyright</div>
-    </div>
-</footer>
+<script src="materialize.min.js"></script>
+<script src="jquery-3.4.1.min.js"></script>
+<script src="d3.min.js"></script>
+<script src="cal-heatmap.min.js"></script>
+<script>
+const maps = {};
+const nowBucket = getBucket(new Date());
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+function getBucket(date) {
+    date.setSeconds(0);
+    date.setMinutes(0);
+    date.setMilliseconds(0);
+    return date.getTime() / 1000;
+}
+
+function parseEvents(i) {
+    return function (data) {
+        const stats = {};
+        data.forEach(e => {
+            const bucket = getBucket(new Date(e.ts));
+
+            if (stats[bucket] !== undefined && stats[bucket] !== 0) {
+                if (e.status === "ok") {
+                    maps[i].count[bucket] = (maps[i].count[bucket] + 1) || 1;
+                    maps[i].value[bucket] = (maps[i].value[bucket] + e.latency) || e.latency;
+                    stats[bucket] = Math.round(maps[i].value[bucket] / maps[i].count[bucket]);
+                } else {
+                    stats[bucket] = 0;
+                }
+            } else {
+                stats[bucket] = e.status === "ok" ? e.latency : 0;
+                if (e.status !== "ok") {
+                    maps[i].error[bucket] = (maps[i].error[bucket] + 1) || 1;
+                }
+            }
+
+            if (bucket === nowBucket) {
+                const now = $(`#now${i}`);
+                if (e.status === "ok") {
+                    now.attr("class", "ok")
+                } else {
+                    now.attr("class", "err")
+                    now.attr("title", e.status)
+                }
+            }
+        })
+        return stats;
+    }
+}
+
+$.get("/api/sites").then(site => {
+    site.forEach((site, i) => {
+        maps[i] = {
+            count: {},
+            value: {},
+            error: {}
+        }
+
+        $("#card-panel").append($(`
+        <div class="card">
+            <div class='card-content'>
+                <div class='card-title'><span id="now${i}"></span>${site.description}</div>
+
+                    <div style="text-align: center">
+                        <a class="btn-small btn-flat navbtn" id="prev${i}">‹</a>
+                        <div id="heatmap${i}" class="heatmap"></div>
+                        <a class="btn-small btn-flat navbtn disabled" id="next${i}">›</a>
+                    </div>
+                    <div>${site.summary}</div>
+                </div>
+            </div>
+        </div>`
+        ))
+        const cal = new CalHeatMap();
+        const range = Math.floor(Math.min(window.innerWidth / 84, 14));
+        $(`#prev${i}`).on("click", () => {
+            if (!cal.previous(range / 2)) {
+                $(`#prev${i}`).addClass("disabled")
+            }
+            $(`#next${i}`).removeClass("disabled")
+        })
+        $(`#next${i}`).on("click", () => {
+            if (!cal.next(range / 2)) {
+                $(`#next${i}`).addClass("disabled")
+            }
+            $(`#prev${i}`).removeClass("disabled")
+        })
+        cal.init({
+            itemSelector: `#heatmap${i}`,
+            domain: "day",
+            subDomain: "hour",
+            domainGutter: 2,
+            rowLimit: 8,
+            cellSize: 12,
+            range: range,
+            start: (new Date()) - 24 * 3600000 * (range - 1),
+            maxDate: new Date(),
+            legendVerticalPosition: "top",
+            label: {position: "bottom", align: "center"},
+            displayLegend: false,
+            data: `/api/events/${i}?start={{t:start}}&end={{t:end}}`,
+            legendColors: {
+                min: "#4CAF50",
+                max: "#FF9800",
+                empty: "#DD2C00"
+            },
+            legend: [1000, 2000, 4000, 8000],
+            afterLoadData: parseEvents(i),
+            animationDuration: 150,
+            highlight: "now",
+            tooltip: true,
+            subDomainTitleFormat: {
+                empty: "(No data)",
+                filled: "{date}"
+            },
+            subDomainDateFormat: (date) => {
+                const bucket = date.getTime() / 1000;
+                if (maps[i].error[bucket]) {
+                    const downTime = maps[i].error[bucket]
+                    if (downTime >= 30) {
+                        return "offline"
+                    } else {
+                        return "~" + downTime * 2 + "m downtime"
+                    }
+                } else {
+                    return Math.round(maps[i].value[bucket] / maps[i].count[bucket]) + "ms latency"
+                }
+            }
+        });
+    })
+})
+</script>
 </body>
 </html>

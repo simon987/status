@@ -39,7 +39,7 @@ class SiteChecker(timers: TimerScheduler[SiteChecker.Check], interval: FiniteDur
     var result = ""
 
     try {
-      val res: HttpResponse[Array[Byte]] = Http(url).asBytes
+      val res: HttpResponse[Array[Byte]] = Http(url).header("User-Agent", "status/1.0").asBytes
 
       if (res.is2xx) {
         result = "ok"

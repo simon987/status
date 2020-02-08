@@ -1,6 +1,5 @@
 import java.sql.Timestamp
 
-import org.openqa.selenium.InvalidArgumentException
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.duration.Duration
@@ -20,11 +19,16 @@ object Store {
 
   def +=(e: Object): Future[Int] = e match {
     case p: PingEvent => _db.run(pingEvents += p)
-    case _ => throw new InvalidArgumentException("Unknown type")
+    case _ => throw new IllegalArgumentException("Unknown type")
   }
 
-  def events(url: String, count: Int): Future[Seq[PingEvent]] = {
-    _db.run(pingEvents.sortBy(_.ts.desc).filter(_.url === url).take(count).result)
+  def events(url: String, start: Long, end: Long): Future[Seq[PingEvent]] = {
+    _db.run(
+      pingEvents
+        .sortBy(_.ts.desc)
+        .filter(e => e.url === url && e.ts >= new Timestamp(start) && e.ts <= new Timestamp(end))
+        .result
+    )
   }
 }
 
