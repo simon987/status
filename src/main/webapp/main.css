@@ -15,6 +15,7 @@
 .ok::after {
     content: "◾";
 }
+
 .err::after {
     content: "◾";
 }
@@ -36,4 +37,8 @@
 
 .card .card-content {
     padding: 12px;
+}
+
+.btn-flat {
+    box-shadow: 0 0 1px 0 grey;
 }
