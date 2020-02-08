@@ -22,7 +22,7 @@ object ActorMain {
 
       Config.sites.foreach({ conf =>
         val checker = context.spawn(SiteChecker(interval), "checker" + counter.toString)
-        checker ! SiteChecker.Check(conf.url, conf.testScript)
+        checker ! SiteChecker.Check(conf.url)
         counter += 1
       })
 
