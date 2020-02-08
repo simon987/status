@@ -34,21 +34,6 @@ function parseEvents(i) {
         data.forEach(e => {
             const bucket = getBucket(new Date(e.ts));
 
-            if (stats[bucket] !== undefined && stats[bucket] !== 0) {
-                if (e.status === "ok") {
-                    maps[i].count[bucket] = (maps[i].count[bucket] + 1) || 1;
-                    maps[i].value[bucket] = (maps[i].value[bucket] + e.latency) || e.latency;
-                    stats[bucket] = Math.round(maps[i].value[bucket] / maps[i].count[bucket]);
-                } else {
-                    stats[bucket] = 0;
-                }
-            } else {
-                stats[bucket] = e.status === "ok" ? e.latency : 0;
-                if (e.status !== "ok") {
-                    maps[i].error[bucket] = (maps[i].error[bucket] + 1) || 1;
-                }
-            }
-
             if (bucket === nowBucket) {
                 const now = $(`#now${i}`);
                 if (e.status === "ok") {
@@ -58,11 +43,28 @@ function parseEvents(i) {
                     now.attr("title", e.status)
                 }
             }
+
+            if (stats[bucket] === 0) {
+                if (e.status !== "ok") {
+                    maps[i].error[bucket] += 1;
+                }
+                return;
+            }
+
+            if (e.status === "ok") {
+                maps[i].count[bucket] = (maps[i].count[bucket] + 1) || 1;
+                maps[i].value[bucket] = (maps[i].value[bucket] + e.latency) || e.latency;
+                stats[bucket] = Math.round(maps[i].value[bucket] / maps[i].count[bucket]);
+            } else {
+                stats[bucket] = 0;
+                maps[i].error[bucket] = 1;
+            }
         })
         return stats;
     }
 }
 
+const fmt = d3.time.format("%b %e - %Hh00<br>");
 $.get("/api/sites").then(site => {
     site.forEach((site, i) => {
         maps[i] = {
@@ -130,15 +132,16 @@ $.get("/api/sites").then(site => {
             },
             subDomainDateFormat: (date) => {
                 const bucket = date.getTime() / 1000;
+                const time = fmt(date)
                 if (maps[i].error[bucket]) {
                     const downTime = maps[i].error[bucket]
                     if (downTime >= 30) {
-                        return "offline"
+                        return time + " offline"
                     } else {
-                        return "~" + downTime * 2 + "m downtime"
+                        return time + " ~" + downTime * 2 + "m downtime"
                     }
                 } else {
-                    return Math.round(maps[i].value[bucket] / maps[i].count[bucket]) + "ms latency"
+                    return time + " " + Math.round(maps[i].value[bucket] / maps[i].count[bucket]) + "ms latency"
                 }
             }
         });

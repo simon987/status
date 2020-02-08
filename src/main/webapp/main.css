@@ -15,6 +15,7 @@
 .ok::after {
     content: "◾";
 }
+
 .err::after {
     content: "◾";
 }
@@ -36,4 +37,12 @@
 
 .card .card-content {
     padding: 12px;
+}
+
+.btn-flat {
+    box-shadow: 0 0 1px 0 grey;
+}
+
+.h_23 .graph-label, .h_0 .graph-label, .h_1 .graph-label, .h_2 .graph-label, .h_3 .graph-label, .h_4 .graph-label, .h_5 .graph-label, .h_6 .graph-label, .h_7 .graph-label {
+    stroke: red;
 }

@@ -1,3 +1,4 @@
+import java.net.SocketTimeoutException
 import java.sql.Timestamp
 
 import akka.actor.typed.Behavior
@@ -33,7 +34,7 @@ class SiteChecker(timers: TimerScheduler[SiteChecker.Check], interval: FiniteDur
     }
   }
 
-  def check(url: String): PingEvent = {
+  def check(url: String, retry: Boolean = true): PingEvent = {
 
     val start = System.currentTimeMillis()
     var result = ""
@@ -48,9 +49,13 @@ class SiteChecker(timers: TimerScheduler[SiteChecker.Check], interval: FiniteDur
       }
 
     } catch {
-      //TODO: Handle/log exception
+      case _: SocketTimeoutException =>
+        if (retry) {
+          return check(url, retry = false)
+        }
+        result = "timeout"
       case e: Exception =>
-        println(e)
+        e.printStackTrace()
         result = "err"
     }
 
