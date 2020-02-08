@@ -1,3 +1,4 @@
+import java.net.SocketTimeoutException
 import java.sql.Timestamp
 
 import akka.actor.typed.Behavior
@@ -8,7 +9,7 @@ import scala.concurrent.duration.FiniteDuration
 
 object SiteChecker {
 
-  final case class Check(url: String, script: String)
+  final case class Check(url: String)
 
   def apply(interval: FiniteDuration): Behavior[Check] = {
     Behaviors.setup { context =>
@@ -28,18 +29,18 @@ class SiteChecker(timers: TimerScheduler[SiteChecker.Check], interval: FiniteDur
 
   private def active(): Behavior[SiteChecker.Check] = {
     Behaviors.receiveMessage[SiteChecker.Check] { message =>
-      Store += check(message.url, message.script)
+      Store += check(message.url)
       active()
     }
   }
 
-  def check(url: String, script: String): PingEvent = {
+  def check(url: String, retry: Boolean = true): PingEvent = {
 
     val start = System.currentTimeMillis()
     var result = ""
 
     try {
-      val res: HttpResponse[Array[Byte]] = Http(url).asBytes
+      val res: HttpResponse[Array[Byte]] = Http(url).header("User-Agent", "status/1.0").asBytes
 
       if (res.is2xx) {
         result = "ok"
@@ -48,9 +49,13 @@ class SiteChecker(timers: TimerScheduler[SiteChecker.Check], interval: FiniteDur
       }
 
     } catch {
-      //TODO: Handle/log exception
+      case _: SocketTimeoutException =>
+        if (retry) {
+          return check(url, retry = false)
+        }
+        result = "timeout"
       case e: Exception =>
-        println(e)
+        e.printStackTrace()
         result = "err"
     }
 

@@ -17,12 +17,19 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % "0.12.0",
 
   "org.scalaj" %% "scalaj-http" % "2.4.2",
-  "org.seleniumhq.selenium" % "selenium-java" % "3.141.59",
-  "org.seleniumhq.selenium" % "selenium-firefox-driver" % "3.141.59",
 
   "org.scalatra" %% "scalatra" % "2.7.0-RC1",
-  "org.eclipse.jetty" % "jetty-webapp" % "9.4.26.v20200117" % "container;compile",
+  "org.eclipse.jetty" % "jetty-webapp" % "9.4.26.v20200117" % "compile",
   "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
   "org.scalatra" %% "scalatra-json" % "2.7.0-RC1",
   "org.json4s" %% "json4s-jackson" % "3.7.0-M2",
 )
+
+assembly / assemblyMergeStrategy := {
+  case PathList("module-info.java") => MergeStrategy.discard
+  case PathList("module-info.class") => MergeStrategy.discard
+  case "META-INF/truffle/language" => MergeStrategy.discard
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}

@@ -1,0 +1,44 @@
+.cal-heatmap-container rect.highlight-now {
+    stroke: black
+}
+
+.ok {
+    color: #4CAF50;
+    user-select: none;
+}
+
+.err {
+    color: #DD2C00;
+    user-select: none;
+}
+
+.ok::after {
+    content: "◾";
+}
+
+.err::after {
+    content: "◾";
+}
+
+.navbtn {
+    line-height: 135px;
+    height: 135px;
+    display: inline-block;
+    vertical-align: top;
+    font-size: x-large;
+    user-select: none;
+}
+
+.heatmap {
+    display: inline-block;
+    margin-bottom: 0.2rem;
+    user-select: none;
+}
+
+.card .card-content {
+    padding: 12px;
+}
+
+.btn-flat {
+    box-shadow: 0 0 1px 0 grey;
+}

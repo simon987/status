@@ -7,7 +7,7 @@ import io.circe.{ParsingFailure, yaml}
 
 case class SiteConfigList(sites: List[SiteConfig])
 
-case class SiteConfig(url: String, testScript: String, description: String)
+case class SiteConfig(url: String, description: String, summary: String)
 
 object Config {
   val sites: List[SiteConfig] = yaml.parser.parse(new FileReader("config.yml"))

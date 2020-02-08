@@ -13,7 +13,7 @@ object ActorMain {
 
   final case class Init()
 
-  final val interval = FiniteDuration(5, SECONDS)
+  final val interval = FiniteDuration(2, MINUTES)
 
   def apply(): Behavior[Init] =
     Behaviors.setup { context =>
@@ -22,7 +22,7 @@ object ActorMain {
 
       Config.sites.foreach({ conf =>
         val checker = context.spawn(SiteChecker(interval), "checker" + counter.toString)
-        checker ! SiteChecker.Check(conf.url, conf.testScript)
+        checker ! SiteChecker.Check(conf.url)
         counter += 1
       })
 
