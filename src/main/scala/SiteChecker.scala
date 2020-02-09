@@ -49,7 +49,7 @@ class SiteChecker(timers: TimerScheduler[SiteChecker.Check], interval: FiniteDur
       }
 
     } catch {
-      case _: SocketTimeoutException =>
+      case _: SocketTimeoutException | _: javax.net.ssl.SSLException =>
         if (retry) {
           return check(url, retry = false)
         }
