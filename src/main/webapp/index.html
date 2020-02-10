@@ -31,6 +31,9 @@ function getBucket(date) {
 
 function parseEvents(i) {
     return function (data) {
+        if (!data) {
+            return
+        }
         const stats = {};
         data.forEach(e => {
             const bucket = getBucket(new Date(e.ts));
@@ -115,12 +118,14 @@ $.get("api/sites").then(site => {
             maxDate: new Date(),
             legendVerticalPosition: "top",
             label: {position: "bottom", align: "center"},
-            displayLegend: false,
+            displayLegend: true,
+            considerMissingDataAsZero: true,
             data: `api/events/${i}?start={{t:start}}&end={{t:end}}`,
             legendColors: {
                 min: "#4CAF50",
                 max: "#FF9800",
-                empty: "#DD2C00"
+                // empty: "#DD2C00"
+                empty: "#4CAF50",
             },
             legend: [750, 1500, 2000, 3000],
             afterLoadData: parseEvents(i),

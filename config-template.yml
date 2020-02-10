@@ -1,0 +1,4 @@
+sites:
+  - url: "https://example.net/"
+    description: description
+    summary: summary (HTML enabled)

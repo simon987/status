@@ -15,5 +15,6 @@ COPY --from=build /build/target/scala-2.13/status-assembly-0.1.jar /app/
 COPY --from=build /build/src/main/webapp /app/src/main/webapp
 
 RUN touch status.mv.db
+ADD config-template.yml config.yml
 ENTRYPOINT ["/usr/bin/java", "-jar", "status-assembly-0.1.jar"]
 EXPOSE 8080
