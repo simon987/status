@@ -122,7 +122,7 @@ $.get("/api/sites").then(site => {
                 max: "#FF9800",
                 empty: "#DD2C00"
             },
-            legend: [1000, 2000, 4000, 8000],
+            legend: [750, 1500, 2000, 3000],
             afterLoadData: parseEvents(i),
             animationDuration: 150,
             highlight: "now",
@@ -136,7 +136,7 @@ $.get("/api/sites").then(site => {
                 const time = fmt(date)
                 if (maps[i].error[bucket]) {
                     const downTime = maps[i].error[bucket]
-                    if (downTime >= 30) {
+                    if (downTime >= 28) {
                         return time + " offline"
                     } else {
                         return time + " ~" + downTime * 2 + "m downtime"
