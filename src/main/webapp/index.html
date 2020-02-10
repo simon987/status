@@ -66,7 +66,7 @@ function parseEvents(i) {
 }
 
 const fmt = d3.time.format("%b %e - %Hh00<br>");
-$.get("/api/sites").then(site => {
+$.get("api/sites").then(site => {
     site.forEach((site, i) => {
         maps[i] = {
             count: {},
@@ -116,7 +116,7 @@ $.get("/api/sites").then(site => {
             legendVerticalPosition: "top",
             label: {position: "bottom", align: "center"},
             displayLegend: false,
-            data: `/api/events/${i}?start={{t:start}}&end={{t:end}}`,
+            data: `api/events/${i}?start={{t:start}}&end={{t:end}}`,
             legendColors: {
                 min: "#4CAF50",
                 max: "#FF9800",
